@@ -1,49 +1,50 @@
 use bracket_lib::prelude::*;
 use specs::prelude::*;
 
-use std::cmp::{max, min};
 use rand::Rng;
+use std::cmp::{max, min};
 
 #[derive(Copy, Clone)]
 pub enum Direction {
-    North, South, East, West
+    North,
+    South,
+    East,
+    West,
 }
 
 impl Direction {
     pub fn iterator() -> impl Iterator<Item = Direction> {
-        [Direction::North, Direction::East, Direction::South, Direction::West].iter().copied()
+        [Direction::North, Direction::East, Direction::South, Direction::West]
+            .iter()
+            .copied()
     }
 }
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum TileType {
-    Floor, Wall
+    Floor,
+    Wall,
 }
 
 impl TileType {
     pub fn get_data(self) -> TileData {
         match self {
-            TileType::Floor => {
-                TileData {
-                    glyph: '.',
-                    base_fg: RGB::from_f32(0.3, 0.3, 0.3),
-                    base_bg: RGB::from_f32(0.1, 0.1, 0.1),
-                    blocks_movement: false,
-                }
+            TileType::Floor => TileData {
+                glyph: '.',
+                base_fg: RGB::from_f32(0.3, 0.3, 0.3),
+                base_bg: RGB::from_f32(0.1, 0.1, 0.1),
+                blocks_movement: false,
             },
 
-            TileType::Wall => {
-                TileData {
-                    glyph: '#',
-                    base_fg: RGB::from_f32(0.2, 0.2, 0.2),
-                    base_bg: RGB::from_f32(0.1, 0.1, 0.1),
-                    blocks_movement: true,
-                }
-            }
+            TileType::Wall => TileData {
+                glyph: '#',
+                base_fg: RGB::from_f32(0.2, 0.2, 0.2),
+                base_bg: RGB::from_f32(0.1, 0.1, 0.1),
+                blocks_movement: true,
+            },
         }
     }
 }
-
 
 pub struct TileData {
     pub glyph: char,
@@ -62,7 +63,12 @@ pub struct Room {
 
 impl Room {
     pub fn new(x: i32, y: i32, w: usize, h: usize) -> Self {
-        Self {x1: x, y1: y, x2: x + w as i32, y2: y + h as i32}
+        Self {
+            x1: x,
+            y1: y,
+            x2: x + w as i32,
+            y2: y + h as i32,
+        }
     }
 
     pub fn overlaps_with(&self, other: &Room) -> bool {
@@ -119,7 +125,15 @@ impl Map {
                 // loop through other rooms and ensure they dont overlap
                 for other_room in self.rooms.iter() {
                     if current_room.overlaps_with(other_room) {
-                        println!("failed to generate room #{} on attempt {} with params: w:{}, h:{}, x:{}, y:{}", room_num + 1, attempt, room_w, room_h, room_x, room_y);
+                        println!(
+                            "failed to generate room #{} on attempt {} with params: w:{}, h:{}, x:{}, y:{}",
+                            room_num + 1,
+                            attempt,
+                            room_w,
+                            room_h,
+                            room_x,
+                            room_y
+                        );
                         place_room = false;
                     }
                 }
@@ -139,7 +153,15 @@ impl Map {
                             self.place_tunnel_horizontal(prev_x, new_x, prev_y);
                         }
                     }
-                    println!("succeeded in placing room #{} on attempt {} with params: w:{}, h:{}, x:{}, y:{}", room_num + 1, attempt, room_w, room_h, room_x, room_y);
+                    println!(
+                        "succeeded in placing room #{} on attempt {} with params: w:{}, h:{}, x:{}, y:{}",
+                        room_num + 1,
+                        attempt,
+                        room_w,
+                        room_h,
+                        room_x,
+                        room_y
+                    );
                     self.rooms.push(current_room);
                     break 'room_gen;
                 }

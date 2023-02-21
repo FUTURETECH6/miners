@@ -1,13 +1,10 @@
+use super::{CombatStats, GameLog, Name, Player, SufferDamage};
 use specs::prelude::*;
-use super::{CombatStats, SufferDamage, Player, Name, GameLog};
 
 pub struct DamageSystem {}
 
 impl<'a> System<'a> for DamageSystem {
-    type SystemData = ( WriteStorage<'a, CombatStats>,
-                        WriteStorage<'a, SufferDamage>,
-                      );
-
+    type SystemData = (WriteStorage<'a, CombatStats>, WriteStorage<'a, SufferDamage>);
 
     fn run(&mut self, data: Self::SystemData) {
         let (mut stats, mut damage) = data;
@@ -17,12 +14,11 @@ impl<'a> System<'a> for DamageSystem {
         }
         damage.clear();
     }
-
 }
 
 pub fn remove_dead(world: &mut World) {
     let mut dead: Vec<Entity> = Vec::new(); // initialize empty array to store all dead entities
-    // new scope to avoid borrow
+                                            // new scope to avoid borrow
     {
         let combat_stats = world.read_storage::<CombatStats>();
         let players = world.read_storage::<Player>();
@@ -40,7 +36,7 @@ pub fn remove_dead(world: &mut World) {
                             log.entries.push(format!("{} died", &victim_name.name));
                         }
                         dead.push(entity);
-                    },
+                    }
 
                     Some(_) => {
                         let death_text = String::from("You have perished.");

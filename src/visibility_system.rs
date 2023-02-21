@@ -1,5 +1,5 @@
+use super::{map::TileType, util, Direction, Map, Position, Viewshed, BASE_LIGHT_LEVEL};
 use specs::prelude::*;
-use super::{Viewshed, Position, Map, Direction, util, map::TileType, BASE_LIGHT_LEVEL};
 
 struct Quadrant {
     origin: Position,
@@ -13,7 +13,7 @@ impl Quadrant {
             Direction::North => (self.origin.x + old_pos.x, self.origin.y - old_pos.y),
             Direction::South => (self.origin.x + old_pos.x, self.origin.y + old_pos.y),
             Direction::East => (self.origin.x + old_pos.y, self.origin.y + old_pos.x),
-            Direction::West => (self.origin.x - old_pos.y, self.origin.y - old_pos.x)
+            Direction::West => (self.origin.x - old_pos.y, self.origin.y - old_pos.x),
         };
 
         Position { x, y }
@@ -51,11 +51,12 @@ impl QuadrantRow {
 pub struct VisibilitySystem {}
 
 impl<'a> System<'a> for VisibilitySystem {
-    type SystemData = ( WriteExpect<'a, Map>,
-                        Entities<'a>,
-                        WriteStorage<'a, Viewshed>,
-                        WriteStorage<'a, Position>,
-                       );
+    type SystemData = (
+        WriteExpect<'a, Map>,
+        Entities<'a>,
+        WriteStorage<'a, Viewshed>,
+        WriteStorage<'a, Position>,
+    );
 
     // runs for entities with viewshed & position components
     fn run(&mut self, data: Self::SystemData) {
@@ -74,8 +75,18 @@ impl<'a> System<'a> for VisibilitySystem {
                     };
                 }
 
-                let mut shadow_data = shadowcast(Position { x: position.x, y: position.y }, viewshed.range, viewshed.emitter, &*map);
-                shadow_data.0.retain(|p| p.x >= 0 && p.x < map.width as i32 && p.y >= 0 && p.y < map.height as i32 ); // prune everything not within map bounds
+                let mut shadow_data = shadowcast(
+                    Position {
+                        x: position.x,
+                        y: position.y,
+                    },
+                    viewshed.range,
+                    viewshed.emitter,
+                    &*map,
+                );
+                shadow_data
+                    .0
+                    .retain(|p| p.x >= 0 && p.x < map.width as i32 && p.y >= 0 && p.y < map.height as i32); // prune everything not within map bounds
                 viewshed.visible_tiles = shadow_data.0; // store entities visible tiles (useful for FOV)
                 viewshed.light_levels = shadow_data.1; // store light levels based on the depth (unused if entity isn't an emitter)
 
@@ -83,8 +94,9 @@ impl<'a> System<'a> for VisibilitySystem {
                 if let Some(_) = viewshed.emitter {
                     for (i, map_pos) in viewshed.visible_tiles.iter().enumerate() {
                         let idx = map.xy_idx(map_pos.x, map_pos.y); // converts algorithm coords to maps
-                        // Add light level to global light map
-                        map.light_levels[idx] = Some(viewshed.light_levels[i].unwrap_or(0.0) + map.light_levels[idx].unwrap_or(0.0));
+                                                                    // Add light level to global light map
+                        map.light_levels[idx] =
+                            Some(viewshed.light_levels[i].unwrap_or(0.0) + map.light_levels[idx].unwrap_or(0.0));
                     }
                 }
             }
@@ -132,7 +144,8 @@ fn shadowcast(origin: Position, range: f32, emitter: Option<f32>, map: &Map) -> 
                         if let Some(max_strength) = emitter {
                             // calculate light level
                             let light_level = max_strength - ((current_row.depth as f32 - 1.0) * max_strength) / range;
-                            light_levels.push(Some(BASE_LIGHT_LEVEL.max(light_level))); // ensures light level is higher than base light
+                            light_levels.push(Some(BASE_LIGHT_LEVEL.max(light_level)));
+                            // ensures light level is higher than base light
                         }
                     }
                 }

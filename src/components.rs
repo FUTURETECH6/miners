@@ -10,7 +10,7 @@ pub struct Position {
 
 impl Position {
     pub fn new(x: i32, y: i32) -> Self {
-        Self {x, y}
+        Self { x, y }
     }
 }
 
@@ -30,10 +30,10 @@ pub struct Player {}
 #[derive(Component, Debug)]
 #[storage(VecStorage)]
 pub struct Viewshed {
-    pub visible_tiles: Vec<Position>, // positions relative to algorithm that are visible
+    pub visible_tiles: Vec<Position>,   // positions relative to algorithm that are visible
     pub light_levels: Vec<Option<f32>>, // light levels
     pub emitter: Option<f32>, // determines if entity emits light, and if so the maximum strength of 1.0 to 0.0
-    pub range: f32, // changes how deep the shadowcasting algorithm goes. affects fov viewrange & lightshed
+    pub range: f32,           // changes how deep the shadowcasting algorithm goes. affects fov viewrange & lightshed
     // pub max_strength: f32, // changes the light level at the source and thus how gradual the light shift is
     pub dirty: bool, // has game changed (player moved)?
 }
@@ -69,7 +69,7 @@ pub struct MeleeAttacking {
 
 #[derive(Component, Debug)]
 pub struct SufferDamage {
-    pub amount : Vec<i32>
+    pub amount: Vec<i32>,
 }
 
 impl SufferDamage {

@@ -1,27 +1,27 @@
 use bracket_terminal::prelude::*;
-use specs::prelude::*;
 use rand::Rng;
+use specs::prelude::*;
 
 use components::*;
-use map::{Direction, Map};
-use visibility_system::VisibilitySystem;
-use monster_ai_system::MonsterAI;
-use map_indexing_system::MapIndexingSystem;
-use melee_combat_system::MeleeCombatSystem;
 use damage_system::DamageSystem;
 use gamelog::GameLog;
+use map::{Direction, Map};
+use map_indexing_system::MapIndexingSystem;
+use melee_combat_system::MeleeCombatSystem;
+use monster_ai_system::MonsterAI;
+use visibility_system::VisibilitySystem;
 
 mod components;
+mod damage_system;
+mod gamelog;
+mod gui;
 mod map;
+mod map_indexing_system;
+mod melee_combat_system;
+mod monster_ai_system;
 mod player;
 mod util;
 mod visibility_system;
-mod monster_ai_system;
-mod map_indexing_system;
-mod melee_combat_system;
-mod damage_system;
-mod gui;
-mod gamelog;
 
 const GAME_WIDTH: usize = 80;
 const GAME_HEIGHT: usize = 50;
@@ -45,15 +45,15 @@ pub struct Game {
 
 impl Game {
     fn run_systems(&mut self) {
-        let mut visibility = VisibilitySystem{};
+        let mut visibility = VisibilitySystem {};
         visibility.run_now(&self.world);
-        let mut monsters = MonsterAI{};
+        let mut monsters = MonsterAI {};
         monsters.run_now(&self.world);
-        let mut mapindex = MapIndexingSystem{};
+        let mut mapindex = MapIndexingSystem {};
         mapindex.run_now(&self.world);
-        let mut melee_combat = MeleeCombatSystem{};
+        let mut melee_combat = MeleeCombatSystem {};
         melee_combat.run_now(&self.world);
-        let mut damage = DamageSystem{};
+        let mut damage = DamageSystem {};
         damage.run_now(&self.world);
 
         // Apply changes to World
@@ -78,21 +78,21 @@ impl GameState for Game {
             RunState::PreRun => {
                 self.run_systems();
                 new_run_state = RunState::AwaitingInput;
-            },
+            }
 
             RunState::AwaitingInput => {
                 new_run_state = player::input(self, ctx);
-            },
+            }
 
             RunState::PlayerTurn => {
                 self.run_systems();
                 new_run_state = RunState::MonsterTurn;
-            },
+            }
 
             RunState::MonsterTurn => {
                 self.run_systems();
                 new_run_state = RunState::AwaitingInput;
-            },
+            }
         }
 
         // update run state
@@ -124,7 +124,13 @@ impl GameState for Game {
                 }
             }
         }
-        ctx.print_color(0, 0, RGB::named(WHITE), RGB::named(BLACK), &format!("{} fps", ctx.fps as u32)); // Render FPS
+        ctx.print_color(
+            0,
+            0,
+            RGB::named(WHITE),
+            RGB::named(BLACK),
+            &format!("{} fps", ctx.fps as u32),
+        ); // Render FPS
         gui::draw_ui(&self.world, ctx);
     }
 }
@@ -144,9 +150,7 @@ fn main() -> BError {
         // .with_automatic_console_resize(true)
         .build()?;
 
-    let mut game: Game = Game {
-        world: World::new(),
-    };
+    let mut game: Game = Game { world: World::new() };
 
     game.world.register::<Position>();
     game.world.register::<Renderable>();
@@ -169,17 +173,35 @@ fn main() -> BError {
 
     // Create player
     let (player_x, player_y) = map.rooms[0].center();
-    let player_entity = game.world.create_entity()
-        .with(Position { x: player_x, y: player_y })
+    let player_entity = game
+        .world
+        .create_entity()
+        .with(Position {
+            x: player_x,
+            y: player_y,
+        })
         .with(Renderable {
             glyph: '☺',
             fg: RGB::from_f32(0.9, 0.9, 0.9),
             bg: RGB::from_f32(0.1, 0.1, 0.1),
         })
         .with(Player {})
-        .with(Viewshed { visible_tiles: vec![], light_levels: vec![], emitter: Some(1.0), range: 5.0, dirty: true })
-        .with(Name { name: String::from("Player") })
-        .with(CombatStats { max_hp: 30, hp: 30, armor: 0, damage: 5 })
+        .with(Viewshed {
+            visible_tiles: vec![],
+            light_levels: vec![],
+            emitter: Some(1.0),
+            range: 5.0,
+            dirty: true,
+        })
+        .with(Name {
+            name: String::from("Player"),
+        })
+        .with(CombatStats {
+            max_hp: 30,
+            hp: 30,
+            armor: 0,
+            damage: 5,
+        })
         .build();
 
     let mut zombie_count = 0;
@@ -189,34 +211,59 @@ fn main() -> BError {
         if rng.gen::<bool>() {
             // spawn monster
             zombie_count += 1;
-            game.world.create_entity()
+            game.world
+                .create_entity()
                 .with(Position { x: x - 1, y: y + 1 })
                 .with(Renderable {
                     glyph: 'z',
                     fg: RGB::from_f32(0.1, 0.5, 0.1),
                     bg: RGB::from_f32(0.1, 0.1, 0.1),
                 })
-                .with(Viewshed { visible_tiles: vec![], light_levels: vec![], emitter: None, range: 1.0, dirty: true })
+                .with(Viewshed {
+                    visible_tiles: vec![],
+                    light_levels: vec![],
+                    emitter: None,
+                    range: 1.0,
+                    dirty: true,
+                })
                 .with(Monster {})
-                .with(Name { name: format!("Zombie #{}", zombie_count) })
+                .with(Name {
+                    name: format!("Zombie #{}", zombie_count),
+                })
                 .with(BlocksTile {})
-                .with(CombatStats { max_hp: 10, hp: 10, armor: 0, damage: 1 })
+                .with(CombatStats {
+                    max_hp: 10,
+                    hp: 10,
+                    armor: 0,
+                    damage: 1,
+                })
                 .build();
         } else {
-            game.world.create_entity()
+            game.world
+                .create_entity()
                 .with(Position { x, y })
                 .with(Renderable {
                     glyph: 'i',
                     fg: RGB::from_f32(1.0, 0.6, 0.0),
                     bg: RGB::from_f32(0.1, 0.1, 0.1),
                 })
-                .with(Name { name: String::from("Torch")})
-                .with(Viewshed { visible_tiles: vec![], light_levels: vec![], emitter: Some(0.6), range: 6.0, dirty: true })
+                .with(Name {
+                    name: String::from("Torch"),
+                })
+                .with(Viewshed {
+                    visible_tiles: vec![],
+                    light_levels: vec![],
+                    emitter: Some(0.6),
+                    range: 6.0,
+                    dirty: true,
+                })
                 .build();
         }
     }
 
-    game.world.insert(GameLog { entries: vec![String::from("Welcome to mine.rs")] });
+    game.world.insert(GameLog {
+        entries: vec![String::from("Welcome to mine.rs")],
+    });
     game.world.insert(map);
     game.world.insert(player_entity);
     game.world.insert(Position::new(player_x, player_y));
